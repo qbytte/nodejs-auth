@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
 import "./Signup.css";
@@ -9,35 +10,33 @@ const Signup = () => {
     formState: { errors },
   } = useForm();
   const [, setLocation] = useLocation();
+  const [error, setError] = useState(false);
 
   return (
     <div className="signup__container">
       <h2>Sign up</h2>
       <form
         onSubmit={handleSubmit((data) => {
-          try {
-            fetch("http://localhost:8000/user/", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                username: data.username,
-                password: data.password,
-                name: data.name,
-                lastname: data.lastname,
-                phone: data.phone,
-                address: data.address,
-              }),
-            })
-              .then((res) => res.json())
-              .then((data) => {
-                console.log(data);
-                setLocation("/");
-              });
-          } catch (error) {
-            console.log(error);
-          }
+          fetch("http://localhost:8000/user/", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: data.username,
+              password: data.password,
+              name: data.name,
+              lastname: data.lastname,
+              phone: data.phone,
+              address: data.address,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              console.log(data);
+              if (data.error) setError(true);
+              else setLocation("/");
+            });
         })}
       >
         <input type="text" {...register("name")} placeholder="Name" required />
@@ -88,6 +87,7 @@ const Signup = () => {
             Phone number must be 10 digits long and must contain only numbers
           </p>
         )}
+        {error && <p>Username already exists</p>}
         <button type="submit">Sign up</button>
       </form>
       <p>
