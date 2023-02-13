@@ -7,7 +7,7 @@ const Login = () => {
   const [, setLocation] = useLocation();
 
   return (
-    <div>
+    <div className="login__container">
       <h2>Login</h2>
       <form onSubmit={handleSubmit()}>
         <input

@@ -1,11 +1,13 @@
 const express = require("express");
-const app = express();
-const PORT = 8000;
-
+const cors = require("cors");
+const bodyParser = require("body-parser");
 const db = require("./database.js");
 const md5 = require("md5");
 
-const bodyParser = require("body-parser");
+const PORT = 8000;
+const app = express();
+
+app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
