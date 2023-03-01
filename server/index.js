@@ -56,7 +56,7 @@ app.get("/user/:id", (req, res) => {
 });
 
 // Create new user
-app.post("/user/", (req, res) => {
+app.post("/user", (req, res) => {
   const errors = [];
 
   if (!req.body.username) {
@@ -112,6 +112,34 @@ app.post("/user/", (req, res) => {
       message: "success",
       data: data,
     });
+  });
+});
+
+app.post("/login", (req, res) => {
+  const sql = "select username, password from user where username = ?";
+  const params = [req.body.username];
+
+  console.log(req.body.username);
+
+  db.get(sql, params, (err, row) => {
+    console.log(params);
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+
+    if (row === undefined) {
+      res.status(400).json({ error: "Username not found" });
+      return;
+    }
+
+    if (row.password === md5(req.body.password)) {
+      res.status(200).json({ Nice: "Logged in bud" });
+      return;
+    } else {
+      res.status(400).json({ error: "Wrong password" });
+      return;
+    }
   });
 });
 
