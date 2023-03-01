@@ -9,7 +9,23 @@ const Login = () => {
   return (
     <div className="login__container">
       <h2>Login</h2>
-      <form onSubmit={handleSubmit()}>
+      <form
+        onSubmit={handleSubmit((data) => {
+          console.log(data);
+          fetch("http://localhost:8000/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              username: data.username,
+              password: data.password,
+            }),
+          }).then((res) => {
+            res.ok ? setLocation("/dashboard") : alert("Wrong credentials");
+          });
+        })}
+      >
         <input
           type="text"
           {...register("username")}

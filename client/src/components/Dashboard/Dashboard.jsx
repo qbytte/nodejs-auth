@@ -1,7 +1,10 @@
 const Dashboard = () => {
   return (
-    <div>Dashboard</div>
-  )
-}
+    <>
+      <h2>User logged in</h2>
+      <button>Log out</button>
+    </>
+  );
+};
 
-export default Dashboard
+export default Dashboard;
