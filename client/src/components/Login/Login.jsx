@@ -1,10 +1,12 @@
 import { useForm } from "react-hook-form";
 import { useLocation } from "wouter";
+import { useState } from "react";
 import "./Login.css";
 
 const Login = () => {
   const { register, handleSubmit } = useForm();
   const [, setLocation] = useLocation();
+  const [error, setError] = useState(false);
 
   return (
     <div className="login__container">
@@ -22,8 +24,8 @@ const Login = () => {
               password: data.password,
             }),
           }).then((res) => {
-            res.ok ? setLocation("/dashboard") : alert("Wrong credentials");
-          });
+            res.ok ? setLocation("/dashboard") : setError(true);
+          })
         })}
       >
         <input
@@ -40,6 +42,7 @@ const Login = () => {
         />
         <button type="submit">Login</button>
       </form>
+      {error && <p>Wrong username or password</p>}
       <p>
         Don't have an account yet?{" "}
         <a onClick={() => setLocation("/signup")}>Sign up</a>

@@ -137,7 +137,7 @@ app.post("/login", (req, res) => {
       res.status(200).json({ Nice: "Logged in bud" });
       return;
     } else {
-      res.status(400).json({ error: "Wrong password" });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
   });
