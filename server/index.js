@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const db = require("./database.js");
-const md5 = require("md5");
+const bcrypt = require("bcrypt");
 
 const PORT = 8000;
 const app = express();
@@ -82,35 +82,39 @@ app.post("/user", (req, res) => {
     return;
   }
 
-  const data = {
-    username: req.body.username,
-    password: md5(req.body.password),
-    name: req.body.name,
-    lastname: req.body.lastname,
-    phone: req.body.phone,
-    address: req.body.address,
-  };
+  bcrypt.genSalt(10, function (err, salt) {
+    bcrypt.hash(req.body.password, salt, function (err, hash) {
+      const data = {
+        username: req.body.username,
+        password: hash,
+        name: req.body.name,
+        lastname: req.body.lastname,
+        phone: req.body.phone,
+        address: req.body.address,
+      };
 
-  const sql =
-    "INSERT INTO user (username, password, name, lastname, phone, address) VALUES (?,?,?,?,?,?)";
-  const params = [
-    data.username,
-    data.password,
-    data.name,
-    data.lastname,
-    data.phone,
-    data.address,
-  ];
+      const sql =
+        "INSERT INTO user (username, password, name, lastname, phone, address) VALUES (?,?,?,?,?,?)";
+      const params = [
+        data.username,
+        data.password,
+        data.name,
+        data.lastname,
+        data.phone,
+        data.address,
+      ];
 
-  db.run(sql, params, (err, result) => {
-    if (err) {
-      res.status(400).json({ error: err.message });
-      return;
-    }
+      db.run(sql, params, (err, result) => {
+        if (err) {
+          res.status(400).json({ error: err.message });
+          return;
+        }
 
-    res.json({
-      message: "success",
-      data: data,
+        res.json({
+          message: "success",
+          data: data,
+        });
+      });
     });
   });
 });
@@ -133,13 +137,15 @@ app.post("/login", (req, res) => {
       return;
     }
 
-    if (row.password === md5(req.body.password)) {
-      res.status(200).json({ Nice: "Logged in bud" });
-      return;
-    } else {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+    bcrypt.compare(req.body.password, row.password, function (err, result) {
+      if (result) {
+        res.status(200).json({ Nice: "Logged in bud" });
+        return;
+      } else {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
+    })
   });
 });
 
