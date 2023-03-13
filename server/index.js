@@ -2,7 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const db = require("./database.js");
-const bcrypt = require("bcrypt");
+const crypto = require("crypto");
+const fs = require("fs");
 
 const PORT = 8000;
 const app = express();
@@ -10,6 +11,28 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+
+const encryptText = (text) => {
+  return crypto.publicEncrypt(
+    {
+      key: fs.readFileSync("public_key.pem", "utf8"),
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    Buffer.from(text)
+  );
+};
+
+const decryptText = (text) => {
+  return crypto.privateDecrypt(
+    {
+      key: fs.readFileSync("private_key.pem", "utf8"),
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    text
+  );
+};
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
@@ -82,39 +105,35 @@ app.post("/user", (req, res) => {
     return;
   }
 
-  bcrypt.genSalt(10, function (err, salt) {
-    bcrypt.hash(req.body.password, salt, function (err, hash) {
-      const data = {
-        username: req.body.username,
-        password: hash,
-        name: req.body.name,
-        lastname: req.body.lastname,
-        phone: req.body.phone,
-        address: req.body.address,
-      };
+  const data = {
+    username: req.body.username,
+    password: encryptText(req.body.password),
+    name: req.body.name,
+    lastname: req.body.lastname,
+    phone: req.body.phone,
+    address: req.body.address,
+  };
 
-      const sql =
-        "INSERT INTO user (username, password, name, lastname, phone, address) VALUES (?,?,?,?,?,?)";
-      const params = [
-        data.username,
-        data.password,
-        data.name,
-        data.lastname,
-        data.phone,
-        data.address,
-      ];
+  const sql =
+    "INSERT INTO user (username, password, name, lastname, phone, address) VALUES (?,?,?,?,?,?)";
+  const params = [
+    data.username,
+    data.password,
+    data.name,
+    data.lastname,
+    data.phone,
+    data.address,
+  ];
 
-      db.run(sql, params, (err, result) => {
-        if (err) {
-          res.status(400).json({ error: err.message });
-          return;
-        }
+  db.run(sql, params, (err, result) => {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
 
-        res.json({
-          message: "success",
-          data: data,
-        });
-      });
+    res.json({
+      message: "success",
+      data: data,
     });
   });
 });
@@ -137,15 +156,14 @@ app.post("/login", (req, res) => {
       return;
     }
 
-    bcrypt.compare(req.body.password, row.password, function (err, result) {
-      if (result) {
-        res.status(200).json({ Nice: "Logged in bud" });
-        return;
-      } else {
-        res.status(401).json({ error: "Unauthorized" });
-        return;
-      }
-    })
+    if (Buffer.from(decryptText(row.password), "utf8").toString() === req.body.password) {
+      res.status(200).json({ Nice: "Logged in bud" });
+      return;
+    } else {
+      console.log();
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
   });
 });
 
